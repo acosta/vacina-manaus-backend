@@ -30,7 +30,7 @@ class PdfDownloader:
         return sha1sum
 
     def __get_latest_file(self):
-        files = glob('raw_db/*.pdf')
+        files = glob('data/raw/*.pdf')
         return max(files, key=os.path.getctime)
 
     def download(self):
@@ -47,7 +47,7 @@ class PdfDownloader:
             link = one_a_tag['href']
             if "Vacinados" in link:
                 filename = link.split("/")[-1]
-                filepath = 'raw_db/' + filename
+                filepath = 'data/raw/' + filename
                 latest_filepath = self.__get_latest_file()
                 current_file_checksum = self.__sha1file(latest_filepath)
 
@@ -57,7 +57,7 @@ class PdfDownloader:
                     basename, ext = filename.split(".")
                     filename = f'{basename}-{timestamp}.{ext}'
                     self.filename = filename
-                    filepath = 'raw_db/' + filename
+                    filepath = 'data/raw/' + filename
 
                 urllib.request.urlretrieve(link, filepath, ProgressDownload())
 
@@ -69,7 +69,7 @@ class PdfDownloader:
                     sys.exit('File already downloaded!')
 
         today = now.strftime('%d/%m/%Y')
-        fd = open('analytics/last_update_date.csv', 'w+')
+        fd = open('data/analyzed/last_update_date.csv', 'w+')
         fd.writelines(['last_update_date\n', today])
         fd.close()
 
