@@ -1,12 +1,10 @@
 FROM python:3.8.7-slim
 
-WORKDIR /app
+WORKDIR /vacina-manaus-backend
 
-COPY requirements.txt /app
+COPY . .
 
 RUN apt-get update && \
     apt-get install -y make automake gcc g++
 
 RUN pip install -r requirements.txt
-
-COPY . /app
