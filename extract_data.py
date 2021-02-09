@@ -1,4 +1,5 @@
 # coding: utf-8
+import gc
 import os
 import sys
 
@@ -6,6 +7,7 @@ import json
 from decimal import Decimal
 
 import pdfplumber
+import psutil
 from validate_docbr import CPF
 
 from progress_download import ProgressDownload
@@ -47,7 +49,43 @@ class PdfExtractor:
                         'role'
                     ]
 
-        self.__open_file()
+        self.__pdf = None
+        self.__columns = [
+            Decimal('38.904'),
+            Decimal('210.530'),
+            Decimal('273.050'),
+            Decimal('315.890'),
+            Decimal('455.110'),
+            Decimal('520.900'),
+            Decimal('586.300'),
+            Decimal('662.020'),
+            Decimal('763.599')
+        ]
+
+    @property
+    def pdf(self):
+        if self.__pdf and (psutil.virtual_memory().percent > 90):
+            print('Exhausted {} bytes, reopening file...'.format(psutil.virtual_memory().used))
+
+            self.__pdf = None
+
+            print('Forcing garbage collector to release memory...')
+
+            gc.collect()
+
+        if not self.__pdf:
+            print('Opening file...')
+
+            self.__pdf = pdfplumber.open(self.input_path)
+
+        return self.__pdf
+
+    @property
+    def columns(self):
+        if not self.__columns:
+            self.__columns = self.__find_columns()
+
+        return self.__columns
 
     def __find_header_index(self, table):
         for i in range(len(table)):
@@ -63,23 +101,6 @@ class PdfExtractor:
         if len(cpf) < 11:
             cpf = cpf.zfill(11)
         return '{}.{}.{}-{}'.format(cpf[:3], cpf[3:6], cpf[6:9], cpf[9:])
-
-    def __open_file(self):
-
-        print('Opening file...')
-
-        self.pdf = pdfplumber.open(self.input_path)
-        self.columns = [
-            Decimal('38.904'),
-            Decimal('210.530'),
-            Decimal('273.050'),
-            Decimal('315.890'),
-            Decimal('455.110'),
-            Decimal('520.900'),
-            Decimal('586.300'),
-            Decimal('662.020'),
-            Decimal('763.599')
-        ]
 
     def __find_columns(self):
         candidate_cols = {}
